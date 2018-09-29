@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="club.small.dao.ProcessTeacherDao">
+    <!--根据一个处理教师的账号,返回一个处理教师-->
+    <select id="isProcessTeacherLogin" parameterType="java.lang.String" resultType="club.small.entity.ProcessTeacher">
+        SELECT * FROM process_teacher WHERE process_teacher_account=#{processTeacherAccount}
+    </select>
+
+    <!--根据处理教师的账号返回未处理问题的数量-->
+    <select id="getUnprocessNum" resultType="int" parameterType="java.lang.String">
+        SELECT COUNT(*) FROM problem WHERE process_teacher_account=#{processTeacherAccount} AND is_assignment_teacher=1 AND is_process=0 AND is_to_teacher=0
+    </select>
+
+    <!--根据处理教师的账号返回被回退的问题数量-->
+    <select id="getToTeacherNum" resultType="int" parameterType="java.lang.String">
+        SELECT COUNT(*) FROM problem WHERE process_teacher_account=#{processTeacherAccount} AND is_assignment_teacher=1 AND is_process=0 AND is_to_teacher=1
+    </select>
+
+    <!--根据处理教师的账号查找未确认的问题的数量-->
+    <select id="getUnconfirmNum" resultType="int" parameterType="java.lang.String">
+        SELECT COUNT(*) FROM problem WHERE process_teacher_account=#{processTeacherAccount} AND is_process=1 AND is_confirm=0
+    </select>
+
+    <!-- 根据管理教师的账号修改他的邮箱 -->
+    <update id="updateProcessTeacherEmail" parameterType="java.lang.String">
+        UPDATE process_teacher SET email=#{email} WHERE process_teacher_account=#{processTeacherAccount}
+    </update>
+
+    <!-- 根据处理教师的账号修改他的密码 -->
+    <update id="updateOneProcessTeacher" parameterType="java.lang.String">
+        UPDATE process_teacher SET process_teacher_password=#{password} WHERE process_teacher_account=#{processTeacherAccount}
+    </update>
+
+    <!--根据页数以及起始页与返回数量，查找处理教师还未处理的问题-->
+    <select id="listUnprocessProblem" resultType="club.small.entity.Problem">
+        SELECT problem_id, problem_type, submit_time, problem_describe, messenger_account FROM problem WHERE process_teacher_account=#{processTeacherAccount} AND problem_type=#{type} AND is_assignment_teacher=1 AND is_process=0 AND is_to_teacher=0 AND problem_describe LIKE "%"#{searchWord}"%" LIMIT #{startIndex}, #{nums}
+    </select>
+
+    <!--根据问题的id，更新一个问题，使其成为已处理状态-->
+    <select id="updateProblemToProcess">
+        UPDATE problem SET process_course=#{processCourse}, is_process=1, is_to_teacher=0, process_time=#{processTime} WHERE problem_id=#{problemId}
+    </select>
+
+    <!--根据页数以及起始页与返回数量，查找管理教师还未确认的问题-->
+    <select id="listUnconfirmProblem" resultType="club.small.entity.Problem">
+        SELECT problem_id, problem_type, process_time, submit_time, problem_describe, process_course, messenger_account FROM problem WHERE process_teacher_account=#{processTeacherAccount} AND problem_type=#{type} AND is_process=1 AND is_confirm=0 AND is_to_teacher=0 AND problem_describe LIKE "%"#{searchWord}"%" LIMIT #{startIndex}, #{nums}
+    </select>
+
+    <!--根据页数以及起始页与返回数量，查找被退回的问题-->
+    <select id="listToTeacherProblem" resultType="club.small.entity.Problem">
+        SELECT problem_id, problem_type, submit_time, problem_describe, messenger_account, to_teacher_reason, to_teacher_time FROM problem WHERE process_teacher_account AND problem_type=#{type} AND is_assignment_teacher=1 AND is_process=0 AND is_to_teacher=1 AND problem_describe LIKE "%"#{searchWord}"%" LIMIT #{startIndex}, #{nums}
+    </select>
+</mapper>

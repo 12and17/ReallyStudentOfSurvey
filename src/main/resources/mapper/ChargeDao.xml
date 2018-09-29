@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="club.small.dao.ChargeDao">
+    <!--增加一个管理员账号-->
+    <insert id="addOneAdministrator" parameterType="java.lang.String">
+        INSERT INTO charge(charge_account, charge_password, charge_name) VALUES (#{chargeAccount}, #{chargePassword}, #{chargeName})
+    </insert>
+
+    <!--查找一个管理员-->
+    <select id="getOneCharge" parameterType="java.lang.String" resultType="club.small.entity.Charge">
+        SELECT * FROM charge WHERE charge_account=#{chargeAccount}
+    </select>
+
+    <!--查找未分配老师的问题的数量-->
+    <select id="getUnassignNum" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_assignment_teacher=0 AND is_reject=0 AND is_reject=0
+    </select>
+
+    <!--查找未确认的问题的数量-->
+    <select id="getNoComfirme" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_assignment_teacher=1 AND is_process=1 AND is_confirm=0;
+    </select>
+
+    <!--查找未分配老师的教学问题数量-->
+    <select id="getUnassignOfTeachNum" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_assignment_teacher=0 AND problem_type='日常教学问题' AND is_reject=0
+    </select>
+
+    <!--查找未分配老师的设备问题数量-->
+    <select id="getUnassignOfEquipmentNum" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_assignment_teacher=0 AND problem_type='设备问题' AND is_reject=0
+    </select>
+
+    <!--查找未分配老师的需求和建议问题数量-->
+    <select id="getUnassignOfDemandNum" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_assignment_teacher=0 AND problem_type='需求和建议' AND is_reject=0
+    </select>
+
+    <!--查找未确认老师的教学问题数量-->
+    <select id="getNoComfirmeOfTeachNum" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_assignment_teacher=1 AND is_process=1 AND is_confirm=0 AND problem_type='日常教学问题';
+    </select>
+
+    <!--查找未确认老师的设备问题数量-->
+    <select id="getNoComfirmeOfEquipmentNum" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_assignment_teacher=1 AND is_process=1 AND is_confirm=0 AND problem_type='设备问题';
+    </select>
+
+    <!--查找未确认老师的需求和建议问题数量-->
+    <select id="getNoComfirmeOfDemandNum" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_assignment_teacher=1 AND is_process=1 AND is_confirm=0 AND problem_type='需求和建议';
+    </select>
+
+    <!-- 根据管理员的账号修改他的密码 -->
+    <update id="updateOneCharge" parameterType="java.lang.String">
+        UPDATE charge SET charge_password=#{password} WHERE charge_account=#{chargeAccount}
+    </update>
+
+    <!-- 根据管理员的账号修改他的邮箱 -->
+    <update id="updateChargeEmail" parameterType="java.lang.String">
+        UPDATE charge SET email=#{email} WHERE charge_account=#{chargeAccount}
+    </update>
+
+    <!-- 根据起始的条数以及规定的返回的条数返回相应数量的问题-->
+    <select id="listUnassignProblem" resultType="club.small.entity.Problem">
+        SELECT problem_id, problem_type, submit_time, problem_describe, messenger_account FROM problem WHERE is_assignment_teacher=0 AND problem_type=#{type} AND is_reject=0 AND problem_describe LIKE "%"#{searchWord}"%" LIMIT #{startIndex}, #{nums}
+    </select>
+
+    <!--根据问题里面信息员的账号查找该问题的班级-->
+    <select id="getProblemClassName" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT a.class_name FROM class a LEFT JOIN messenger b ON a.class_id=(SELECT class_id FROM messenger WHERE messenger_account=#{messengerAccount}) LIMIT 0, 1
+    </select>
+
+    <!--根据问题类型找出该类型的所有的处理教师-->
+    <select id="listSameTeacher" resultType="club.small.entity.ProcessTeacher" parameterType="java.lang.String">
+        SELECT process_teacher_account, process_teacher_type, process_teacher_name FROM process_teacher WHERE process_teacher_type=#{problemType}
+    </select>
+
+    <!--根据问题的id以及老师的账号,给该问题分配老师-->
+    <update id="updateUnassignProblem">
+        UPDATE problem SET is_assignment_teacher=1, assignment_time=#{timestamp}, process_teacher_account=#{teacherAccount} WHERE problem_id=#{problemId}
+    </update>
+
+    <!--根据该问题的id驳回该问题，并且更新驳回理由-->
+    <update id="updateRejectProblem">
+        UPDATE problem SET is_reject=1, reject_time=#{timestamp}, reject_reason=#{rejectReason} WHERE problem_id=#{problemId}
+    </update>
+
+    <!--查找所有的班级-->
+    <select id="listAllClass" resultType="club.small.entity.ClassInfo">
+        SELECT * FROM class
+    </select>
+
+    <!--查找所有的信息员-->
+    <select id="listAllMessenger" resultType="club.small.entity.Messenger">
+        SELECT * FROM messenger
+    </select>
+
+    <!--增加一个信息员账号-->
+    <insert id="addOneMessenger">
+        INSERT INTO messenger(messenger_account, messenger_password, class_id) VALUES (#{messengerAccount}, #{messengerPassword}, #{classId})
+    </insert>
+
+    <!--删除一个信息员-->
+    <delete id="deleteOneMessenger" parameterType="java.lang.String">
+        DELETE FROM messenger WHERE messenger_account=#{messengerAccount}
+    </delete>
+
+    <!-- 根据起始的条数以及规定的返回的条数返回相应数量的未确认问题-->
+    <select id="listUnconfirmProblem" resultType="club.small.entity.Problem">
+        SELECT problem_id, problem_type, submit_time, process_teacher_account, problem_describe, messenger_account, process_time, process_course FROM problem WHERE problem_type=#{type} AND is_assignment_teacher=1 AND is_process=1 AND is_confirm=0 AND is_to_teacher=0 AND problem_describe LIKE "%"#{searchWord}"%" LIMIT #{startIndex}, #{nums}
+    </select>
+
+    <!--确认一个已经处理完毕的问题-->
+    <update id="updateToConfirmOneProblem">
+        UPDATE problem SET is_confirm=1, confirm_time=#{confirmTime} WHERE problem_id=#{problemId}
+    </update>
+
+    <!--根据处理教师的账号查找该教师的姓名-->
+    <select id="selectOneProcessTeacherName" parameterType="java.lang.String" resultType="java.lang.String">
+        SELECT process_teacher_name FROM process_teacher WHERE process_teacher_account=#{teacherAccount}
+    </select>
+
+    <!--根据该问题的id退回给教师，并且更新退回理由-->
+    <update id="updateToTeacherProblem">
+        UPDATE problem SET is_to_teacher=1, is_process=0, to_teacher_time=#{timestamp}, to_teacher_reason=#{toTeacherReason} WHERE problem_id=#{problemId}
+    </update>
+</mapper>

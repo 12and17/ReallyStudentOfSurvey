@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="club.small.dao.MessengerDao">
+    <!-- 目的：为dao接口方法提供sql语句配置 -->
+    <!-- 根据输入的信息员账号进行查找出这个信息员 -->
+    <select id="isMessangerLogin" resultType="club.small.entity.Messenger" parameterType="java.lang.String">
+        SELECT * FROM messenger WHERE messenger_account=#{account}
+    </select>
+
+    <!--根据信息员的班级id查找一个对应的班级-->
+    <select id="selectOneClassName" resultType="java.lang.String" parameterType="int">
+        SELECT class_name FROM class WHERE class_id=#{classId}
+    </select>
+
+    <!-- 根据信息员的账号添加一个问题 -->
+    <insert id="addOneProblem" parameterType="club.small.entity.Problem">
+        INSERT INTO
+        problem(messenger_account, problem_type, problem_describe, process_time, process_teacher_account, process_course, is_confirm, is_process, submit_time, is_assignment_teacher, is_reject, assignment_time, reject_time, is_agree, agree_time, is_to_teacher, to_teacher_time)
+        VALUES
+        (#{messengerAccount}, #{problemType}, #{problemDescribe}, #{processTime}, #{processTeacherAccount}, #{processCourse}, #{isConfirm}, #{isProcess}, #{submitTime}, #{isAssignmentTeacher}, #{isReject}, #{assignmentTime}, #{rejectTime}, #{isAgree}, #{agreeTime}, #{isToTeacher}, #{toTeacherTime})
+    </insert>
+
+    <!--根据信息员的账号查找所有还未处理的问题-->
+    <select id="listUnsubmitProblem" parameterType="java.lang.String" resultType="club.small.entity.Problem">
+        SELECT * FROM problem WHERE messenger_account=#{messengerAccount} AND is_agree=0 AND is_reject=0
+    </select>
+
+    <!--根据搜索词搜索查找出来的问题-->
+    <select id="listSelectUnsubmitProblem" resultType="club.small.entity.Problem">
+        SELECT * FROM problem WHERE messenger_account=#{messengerAccount} AND is_agree=0 AND problem_describe LIKE "%"#{describeWord}"%"
+    </select>
+
+    <!--根据信息员的账号查找所有被驳回的问题-->
+    <select id="listRejectProblem" parameterType="java.lang.String" resultType="club.small.entity.Problem">
+        SELECT * FROM problem WHERE messenger_account=#{messengerAccount} AND is_process=0 AND is_reject=1
+    </select>
+
+    <!--根据信息员账号以及信息员输入的问题描述词搜索所有的问题-->
+    <select id="listBySelectOfProblem" parameterType="java.lang.String" resultType="club.small.entity.Problem">
+        SELECT * FROM problem WHERE messenger_account=#{messengerAccount} AND problem_describe LIKE "%"#{describleWord}"%"
+    </select>
+
+    <!-- 根据信息员的账号修改他的密码 -->
+    <update id="updateOneMessenger" parameterType="java.lang.String">
+        UPDATE messenger SET messenger_password=#{password} WHERE messenger_account=#{messengerAccount}
+    </update>
+
+    <!-- 根据信息员的账号修改他的邮箱 -->
+    <update id="updateMessengerEmail" parameterType="java.lang.String">
+        UPDATE messenger SET email=#{email} WHERE messenger_account=#{messengerAccount}
+    </update>
+
+    <!--查找未处理的问题的数量-->
+    <select id="getUnprocessNum" resultType="int" parameterType="java.lang.String">
+        SELECT COUNT(*) FROM problem WHERE messenger_account=#{messengerAccount} AND is_agree=0
+    </select>
+
+    <!--查找被驳回的问题的数量-->
+    <select id="getReject" resultType="int" parameterType="java.lang.String">
+        SELECT COUNT(*) FROM problem WHERE messenger_account=#{messengerAccount} AND is_reject=1 AND is_assignment_teacher=0;
+    </select>
+
+    <!--查找未处理的教学问题数量-->
+    <select id="getUnprocessOfTeachNum" resultType="int" parameterType="java.lang.String">
+        SELECT COUNT(*) FROM problem WHERE messenger_account=#{messengerAccount} AND problem_type='日常教学问题' AND is_agree=0
+    </select>
+
+    <!--查找未处理的设备问题数量-->
+    <select id="getUnprocessOfEquipmentNum" resultType="int" parameterType="java.lang.String">
+        SELECT COUNT(*) FROM problem WHERE messenger_account=#{messengerAccount} AND problem_type='设备问题' AND is_agree=0
+    </select>
+
+    <!--查找未处理的需求和建议问题数量-->
+    <select id="getUnprocessOfDemandNum" resultType="int" parameterType="java.lang.String">
+        SELECT COUNT(*) FROM problem WHERE messenger_account=#{messengerAccount} AND problem_type='需求和建议' AND is_agree=0
+    </select>
+
+    <!--查找被驳回老师的教学问题数量-->
+    <select id="getRejectOfTeachNum" resultType="int" parameterType="java.lang.String">
+        SELECT COUNT(*) FROM problem WHERE messenger_account=#{messengerAccount} AND problem_type='日常教学问题' AND is_reject=1 AND is_assignment_teacher=0;
+    </select>
+
+    <!--查找被驳回老师的设备问题数量-->
+    <select id="getRejectOfEquipmentNum" resultType="int" parameterType="java.lang.String">
+        SELECT COUNT(*) FROM problem WHERE messenger_account=#{messengerAccount} AND problem_type='设备问题' AND is_reject=1 AND is_assignment_teacher=0;
+    </select>
+
+    <!--查找被驳回老师的需求和建议问题数量-->
+    <select id="getRejectOfDemandNum" resultType="int" parameterType="java.lang.String">
+        SELECT COUNT(*) FROM problem WHERE messenger_account=#{messengerAccount} AND problem_type='需求和建议' AND is_reject=1 AND is_assignment_teacher=0;
+    </select>
+
+    <!--查找该信息员的所有的已同意问题-->
+    <select id="listAlreadyProcessProblem" resultType="club.small.entity.Problem">
+        SELECT  problem_id,  problem_type, process_time, submit_time, assignment_time, process_time, confirm_time, agree_time, process_teacher_account, problem_describe, process_course, is_assignment_teacher, is_process, is_confirm, is_agree
+        FROM problem
+        WHERE messenger_account=#{messengerAccount} AND is_agree=1 AND problem_describe LIKE "%"#{searchWord}"%" LIMIT #{startIndex}, #{nums}
+    </select>
+</mapper>

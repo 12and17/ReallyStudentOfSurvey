@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="club.small.dao.LeaderDao">
+    <!--根据教师的账号，返回一个教师姓名-->
+    <select id="selectProcessTeacherName" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT process_teacher_name FROM process_teacher WHERE process_teacher_account=#{processTeacherAccount}
+    </select>
+
+    <!--根据教师的账号，返回一个教师-->
+    <select id="selectProcessTeacher" resultType="club.small.entity.ProcessTeacher" parameterType="java.lang.String">
+        SELECT process_teacher_name, process_teacher_account, process_teacher_type, email FROM process_teacher WHERE process_teacher_account=#{processTeacherAccount}
+    </select>
+
+    <!--根据一个领导的账号,返回一个领导-->
+    <select id="selectOneLeader" parameterType="java.lang.String" resultType="club.small.entity.Leader">
+        SELECT * FROM leader WHERE leader_account=#{leaderAccount}
+    </select>
+
+    <!--查找返回未确认问题的数量-->
+    <select id="seelectUnagreeProblemNum" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_confirm=1 AND is_agree=0
+    </select>
+
+    <!--查找返回未确认教学问题的数量-->
+    <select id="seelectUnagreeProblemOfTeachNum" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_confirm=1 AND is_agree=0 AND problem_type='日常教学问题'
+    </select>
+
+    <!--查找返回未确认设备问题的数量-->
+    <select id="seelectUnagreeProblemOfEquipmentNum" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_confirm=1 AND is_agree=0 AND problem_type='设备问题'
+    </select>
+
+    <!--查找返回未确认需求和建议问题的数量-->
+    <select id="seelectUnagreeProblemOfDemandNum" resultType="int">
+        SELECT COUNT(*) FROM problem WHERE is_confirm=1 AND is_agree=0 AND problem_type='需求和建议'
+    </select>
+
+    <!-- 根据领导的账号修改他的密码 -->
+    <update id="updateOneLeader" parameterType="java.lang.String">
+        UPDATE leader SET leader_password=#{password} WHERE leader_account=#{leaderAccount}
+    </update>
+
+    <!-- 根据领导的账号修改他的邮箱 -->
+    <update id="updateLeaderEmail" parameterType="java.lang.String">
+        UPDATE leader SET email=#{email} WHERE leader_account=#{leaderAccount}
+    </update>
+
+    <!--查找特定类型的所有的未同意问题-->
+    <select id="listUnagreeProblem" resultType="club.small.entity.Problem">
+        SELECT  problem_id, messenger_account, problem_type, process_time, submit_time, process_teacher_account, problem_describe, process_course
+        FROM problem
+        WHERE is_confirm=1 AND is_agree=0 AND problem_type=#{problemType} AND problem_describe LIKE "%"#{searchWord}"%" LIMIT #{startIndex}, #{nums}
+    </select>
+
+    <!--根据问题的id更新该问题，使其已同意-->
+    <update id="updateOneProblemToAgree">
+        UPDATE problem SET is_agree=1, agree_time=#{timestamp} WHERE problem_id=#{problemId}
+    </update>
+
+    <!--查找日常教学问题的处理教师数量-->
+    <select id="selectTeachOfTeacherNum" resultType="int">
+        SELECT COUNT(process_teacher_account) FROM process_teacher WHERE process_teacher_type='日常教学问题'
+    </select>
+
+    <!--查找设备问题的处理教师数量-->
+    <select id="selectEquipmentOfTeacherNum" resultType="int">
+        SELECT COUNT(process_teacher_account) FROM process_teacher WHERE process_teacher_type='设备问题'
+    </select>
+
+    <!--查找需求和建议问题的处理教师数量-->
+    <select id="selectDemandOfTeacherNum" resultType="int">
+        SELECT COUNT(process_teacher_account) FROM process_teacher WHERE process_teacher_type='需求和建议'
+    </select>
+
+    <!--增加一个处理教师-->
+    <insert id="insertOneProcessTeacher">
+      INSERT INTO process_teacher(process_teacher_account, process_teacher_password, process_teacher_type, process_teacher_name) VALUES (#{processTeacherAccount}, #{password}, #{processType}, #{processTeacherName})
+    </insert>
+
+    <!--根据处理教师的账号删除一个处理教师-->
+    <delete id="deleteOneProcessTeacher" parameterType="java.lang.String">
+        DELETE FROM process_teacher WHERE process_teacher_account=#{processTeacherAccount}
+    </delete>
+
+    <!--更新一个管理员-->
+    <update id="updateOneCharge">
+        UPDATE charge SET charge_account=#{chargeAccount}, charge_password=#{chargePassword}, charge_name=#{chargeName}
+    </update>
+
+    <!--返回一个管理员-->
+    <select id="selectOneCharge" resultType="club.small.entity.Charge">
+        SELECT charge_account, charge_password, charge_name FROM charge LIMIT 0,1
+    </select>
+
+    <!--返回管理员姓名-->
+    <select id="selectChargeName" resultType="java.lang.String">
+        SELECT charge_name FROM charge
+    </select>
+
+    <!--查找最近一周的处理的问题-->
+    <select id="listLastWeekProcessProblem" resultType="club.small.entity.Problem">
+        SELECT problem_type, problem_describe, sumbit_time, messenger_account, process_time, process_teacher_account, process_course FROM problem  WHERE is_agree=1 AND DATE_SUB(CURDATE(), INTERVAL 7 DAY) &lt;= DATA(column_time)
+    </select>
+
+    <!-- 增加一个班级 -->
+    <insert id="addOneClass" parameterType="java.lang.String">
+        INSERT INTO class(class_name) VALUES (#{className})
+    </insert>
+
+    <!--增加一个领导-->
+    <insert id="insertOneLeader">
+        INSERT INTO leader(leader_account, leader_password, leader_name) VALUES (#{leaderAccount}, #{leaderPassword}, #{leaderName})
+    </insert>
+</mapper>
